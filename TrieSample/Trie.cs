@@ -18,14 +18,14 @@ namespace TrieSample
 
             public Node(char value)
             {
-                this.value = value; 
+                this.value = value;
             }
 
             public override string ToString()
             {
                 return "value = " + value;
             }
-            
+
             public bool HasChild(char ch)
             {
                 return children.ContainsKey(ch);
@@ -34,16 +34,21 @@ namespace TrieSample
             public void AddChild(char ch)
             {
                 children.Add(ch, new Node(value));
-            } 
+            }
 
             public Node GetChild(char ch)
             {
-                return children.GetValueOrDefault(ch);
+                return children[ch];
             }
 
             public Node[] GetChildren()
             {
                 return children.Values.ToArray();
+            }
+
+            public void RemoveChild(char ch)
+            {
+                children.Remove(ch);
             }
         }
 
@@ -80,14 +85,78 @@ namespace TrieSample
         {
             Tranverse(root);
         }
-        private void Tranverse(Node root)
+
+        private void Tranverse(Node nRoot)
         {
-            
             // Use memo for large words.
-            foreach (var child in root.GetChildren()) 
+            foreach (var child in nRoot.GetChildren())
                 Tranverse(child);
 
-    
+            Console.WriteLine(nRoot.value);
+        }
+
+        public void Remove(string word)
+        {
+            if (word is null) return;
+            Remove(root, word, index: 0);
+        }
+        private void Remove(Node root, string word, int index)
+        {
+            if(index  == word.Length)
+            {
+                root.isEndOfWord = false;
+                return;
+            }
+
+            var ch = word[index];
+            var child = root.GetChild(ch);
+
+            if (child is null) return;
+
+            Remove(child, word, index + 1);
+
+            Console.WriteLine(root.value);
+
+            if (child.GetChildren().Length == 0 && !child.isEndOfWord)
+                root.RemoveChild(ch);
+        }
+
+        public List<string> FindWords(string prefix)
+        {
+
+            List<string> words = new();
+            var lastNode = FindLastNodeOf(prefix);
+            FindWords(lastNode, prefix, words);
+
+            return words;
+        }
+
+        private void FindWords(Node root, string prefix, List<string> words)
+        {
+            if (root is null) return;
+
+            if (root.isEndOfWord)
+                words.Add(prefix);
+
+            foreach (var child in root.GetChildren())
+                FindWords(child, prefix + child.value, words);
+        }
+
+        private Node FindLastNodeOf(string prefix)
+        {
+
+            if (prefix is null) return null;
+             
+            var current = root;
+
+            foreach (var ch in prefix.ToCharArray())
+            {
+               var child = current.GetChild(ch);
+                if(child == null)
+                    return null;
+                current = child;
+            }
+            return current;
         }
     }
 }
